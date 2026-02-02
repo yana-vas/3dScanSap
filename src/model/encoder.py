@@ -1,8 +1,6 @@
-
 import torch
 import torch.nn as nn
 import torchvision.models as models
-
 
 class ResNetEncoder(nn.Module):
 
@@ -25,7 +23,7 @@ class ResNetEncoder(nn.Module):
         return self.resnet(x)
 
     def get_num_params(self) -> int:
-        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+        return sum(p.numel() for p in self.parameters() if p.requires_grad) # generator
 
     def freeze_backbone(self) -> None:
         for name, param in self.resnet.named_parameters():

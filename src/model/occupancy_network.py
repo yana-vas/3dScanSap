@@ -37,18 +37,6 @@ class OccupancyNetwork(nn.Module):
         occupancy = self.decoder(latent, points)
         return occupancy
 
-    def encode(self, images: torch.Tensor) -> torch.Tensor:
-#              to latent vector
-        return self.encoder(images)
-
-    def decode(
-        self,
-        latent: torch.Tensor,
-        points: torch.Tensor
-    ) -> torch.Tensor:
-        
-        return self.decoder(latent, points)
-
     def generate_occupancy_grid(
         self,
         images: torch.Tensor,
@@ -56,11 +44,11 @@ class OccupancyNetwork(nn.Module):
         batch_size: int = 100000
     ) -> np.ndarray:
         
-        self.eval()
+        self.eval() # to delete
         device = next(self.parameters()).device
 
         with torch.no_grad():
-            latent = self.encode(images)  # (1, latent_dim)
+            latent = self.encoder(images) # (1, latent_dim)
 
             x = torch.linspace(-1, 1, resolution)
             y = torch.linspace(-1, 1, resolution)
@@ -75,7 +63,7 @@ class OccupancyNetwork(nn.Module):
 
             for i in range(0, num_points, batch_size):
                 batch_points = points[i:i + batch_size].unsqueeze(0)  #  (1, batch, 3)
-                batch_occ = self.decode(latent, batch_points)  #         (1, batch, 1)
+                batch_occ = self.decoder(latent, batch_points) # (1, batch, 1)
                 occupancy_list.append(batch_occ.squeeze(0).squeeze(-1).cpu())
 
             occupancy = torch.cat(occupancy_list, dim=0)
