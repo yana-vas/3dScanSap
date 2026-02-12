@@ -16,7 +16,8 @@ class ImagePreprocessor:
             [transforms.Resize((image_size, image_size)),
             transforms.ToTensor(),
             transforms.Normalize(mean=mean, std=std)])
-        self.transform_wiht_augmentation = transforms.Compose([
+        
+        self.transform_with_augmentation = transforms.Compose([
             transforms.Resize((image_size + 32, image_size + 32)),
             transforms.RandomCrop(image_size),
             transforms.RandomHorizontalFlip(p=0.5),
