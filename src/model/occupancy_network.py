@@ -63,7 +63,8 @@ class OccupancyNetwork(nn.Module):
 
             for i in range(0, num_points, batch_size):
                 batch_points = points[i:i + batch_size].unsqueeze(0)  #  (1, batch, 3)
-                batch_occ = self.decoder(latent, batch_points) # (1, batch, 1)
+                batch_logits = self.decoder(latent, batch_points) # (1, batch, 1)
+                batch_occ = torch.sigmoid(batch_logits)
                 occupancy_list.append(batch_occ.squeeze(0).squeeze(-1).cpu())
 
             occupancy = torch.cat(occupancy_list, dim=0)
@@ -77,20 +78,22 @@ class OccupancyNetwork(nn.Module):
             'state_dict': self.state_dict(),
             'latent_dim': self.latent_dim,
             'hidden_dim': self.decoder.hidden_dim,
+            'num_layers': len([m for m in self.decoder.mlp if isinstance(m, nn.Linear)]),
         }, path)
         print(f"Model saved to {path}")
 
     def load(self, path: str) -> None:
-        checkpoint = torch.load(path, map_location='cpu')
+        checkpoint = torch.load(path, map_location='cpu', weights_only=False)
         self.load_state_dict(checkpoint['state_dict'])
         print(f"Model loaded from {path}")
 
     @classmethod
     def from_checkpoint(cls, path: str) -> 'OccupancyNetwork':
-        checkpoint = torch.load(path, map_location='cpu')
+        checkpoint = torch.load(path, map_location='cpu', weights_only=False)
         model = cls(
             latent_dim=checkpoint['latent_dim'],
-            hidden_dim=checkpoint['hidden_dim']
+            hidden_dim=checkpoint['hidden_dim'],
+            num_layers=checkpoint.get('num_layers', 5),
         )
         model.load_state_dict(checkpoint['state_dict'])
         return model
@@ -103,13 +106,13 @@ class OccupancyLoss(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.bce = nn.BCELoss()
+        self.bce = nn.BCEWithLogitsLoss()
 
     def forward(
         self,
         predicted: torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        
+
         return self.bce(predicted, target)
     

@@ -68,7 +68,7 @@ def train_epoch(
         total_loss += loss.item()
         pbar.set_postfix({'loss': f'{loss.item():.4f}'})
 
-    return total_loss / len(train_loader)
+    return total_loss / max(len(train_loader), 1)
 
 
 def validate(
@@ -90,7 +90,7 @@ def validate(
             loss = criterion(predictions, occupancy)
             total_loss += loss.item()
 
-    return total_loss / len(val_loader)
+    return total_loss / max(len(val_loader), 1)
 
 
 def main():
@@ -130,7 +130,7 @@ def main():
     best_val_loss = float('inf')
 
     if args.resume:
-        checkpoint = torch.load(args.resume)
+        checkpoint = torch.load(args.resume, weights_only=False)
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         start_epoch = checkpoint['epoch'] + 1
@@ -163,6 +163,7 @@ def main():
 
     print("\nStarting training...")
 
+    checkpoint = None
     try:
         for epoch in range(start_epoch, epochs):
             train_loss = train_epoch(
@@ -199,8 +200,11 @@ def main():
 
     except KeyboardInterrupt:
         print("\nTraining interrupted by user")
-        torch.save(checkpoint, output_dir / 'interrupted.pt')
-        print("Checkpoint saved to interrupted.pt")
+        if checkpoint is not None:
+            torch.save(checkpoint, output_dir / 'interrupted.pt')
+            print("Checkpoint saved to interrupted.pt")
+        else:
+            print("No checkpoint to save (interrupted before first epoch completed)")
 
     print("\nTraining complete!")
     print(f"Best validation loss: {best_val_loss:.4f}")

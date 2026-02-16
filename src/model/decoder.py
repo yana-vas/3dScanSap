@@ -45,7 +45,6 @@ class OccupancyDecoder(nn.Module):
         features_flat = features.reshape(-1, self.latent_dim + 3)
 
         output_flat = self.mlp(features_flat)
-        output_flat = torch.sigmoid(output_flat)
         output = output_flat.reshape(batch_size, num_points, 1)
 
         return output

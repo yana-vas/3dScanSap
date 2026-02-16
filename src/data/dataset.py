@@ -129,7 +129,8 @@ class ShapeNetDataset(Dataset):
         all_occ = all_occ.astype(np.float32)
 
         n = all_points.shape[0]
-        choice = np.random.choice(n, size=self.num_points, replace=False)
+        replace = n < self.num_points
+        choice = np.random.choice(n, size=self.num_points, replace=replace)
         points = all_points[choice]
         occupancy = all_occ[choice]
 
