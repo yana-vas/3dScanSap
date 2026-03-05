@@ -30,7 +30,7 @@ class OccupancyNetwork(nn.Module):
     def forward(
         self,
         images: torch.Tensor,
-        points: torch.Tensor
+        points: torch.Tensor # batch_size, num_ponits, 3
     ) -> torch.Tensor:
         
         latent = self.encoder(images)
@@ -44,7 +44,6 @@ class OccupancyNetwork(nn.Module):
         batch_size: int = 100000
     ) -> np.ndarray:
         
-        self.eval() # to delete
         device = next(self.parameters()).device
 
         with torch.no_grad():
@@ -54,8 +53,8 @@ class OccupancyNetwork(nn.Module):
             y = torch.linspace(-1, 1, resolution)
             z = torch.linspace(-1, 1, resolution)
 
-            xx, yy, zz = torch.meshgrid(x, y, z, indexing='ij')
-            points = torch.stack([xx, yy, zz], dim=-1).reshape(-1, 3)
+            x_grid, y_grid, z_grid = torch.meshgrid(x, y, z, indexing='ij')
+            points = torch.stack([x_grid, y_grid, z_grid], dim=-1).reshape(-1, 3) 
             points = points.to(device)
 
             occupancy_list = []
@@ -63,8 +62,8 @@ class OccupancyNetwork(nn.Module):
 
             for i in range(0, num_points, batch_size):
                 batch_points = points[i:i + batch_size].unsqueeze(0)  #  (1, batch, 3)
-                batch_logits = self.decoder(latent, batch_points) # (1, batch, 1)
-                batch_occ = torch.sigmoid(batch_logits)
+                batch_raw_occ = self.decoder(latent, batch_points) # (1, batch, 1)
+                batch_occ = torch.sigmoid(batch_raw_occ) # sigmoid to the raw guesses so it is bounded from 0 to 1
                 occupancy_list.append(batch_occ.squeeze(0).squeeze(-1).cpu())
 
             occupancy = torch.cat(occupancy_list, dim=0)
@@ -100,19 +99,3 @@ class OccupancyNetwork(nn.Module):
 
     def get_num_params(self) -> int:
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
-
-
-class OccupancyLoss(nn.Module):
-
-    def __init__(self):
-        super().__init__()
-        self.bce = nn.BCEWithLogitsLoss()
-
-    def forward(
-        self,
-        predicted: torch.Tensor,
-        target: torch.Tensor
-    ) -> torch.Tensor:
-
-        return self.bce(predicted, target)
-    

@@ -45,4 +45,4 @@ class PointSampler:
                 self.bounds[0], self.bounds[1],
                 size=(n, 3)
             ).astype(np.float32)
-        
+   

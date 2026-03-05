@@ -48,4 +48,3 @@ class ImagePreprocessor:
         mean = torch.tensor(self.mean, device=tensor.device).view(3, 1, 1)
         std = torch.tensor(self.std, device=tensor.device).view(3, 1, 1)
         return tensor * std + mean
-    

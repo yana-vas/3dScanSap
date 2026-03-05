@@ -81,4 +81,3 @@ def save_mesh(
     else:
         print(f"Unknown format: {file_format}")
         return False
-    

@@ -7,9 +7,8 @@ from torch.utils.data import DataLoader
 from pathlib import Path
 from tqdm import tqdm
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.model import OccupancyNetwork, OccupancyLoss
+from src.model import OccupancyNetwork
 from src.data import get_dataloader
 from src.utils.config import load_config
 
@@ -122,7 +121,7 @@ def main():
 
     print(f"Model parameters: {model.get_num_params():,}")
 
-    criterion = OccupancyLoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
@@ -190,18 +189,18 @@ def main():
                 'hidden_dim': config.model.hidden_dim,
             }
 
-            torch.save(checkpoint, output_dir / 'last.pt')
+            # torch.save(checkpoint, output_dir / 'last.pt')
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 checkpoint['best_val_loss'] = best_val_loss
-                torch.save(checkpoint, output_dir / 'best.pt')
+                # torch.save(checkpoint, output_dir / 'best.pt')
                 print(f"  New best model saved! Val Loss: {val_loss:.4f}")
 
     except KeyboardInterrupt:
         print("\nTraining interrupted by user")
         if checkpoint is not None:
-            torch.save(checkpoint, output_dir / 'interrupted.pt')
+            # torch.save(checkpoint, output_dir / 'interrupted.pt')
             print("Checkpoint saved to interrupted.pt")
         else:
             print("No checkpoint to save (interrupted before first epoch completed)")
