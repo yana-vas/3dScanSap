@@ -189,18 +189,18 @@ def main():
                 'hidden_dim': config.model.hidden_dim,
             }
 
-            # torch.save(checkpoint, output_dir / 'last.pt')
+            torch.save(checkpoint, output_dir / 'last.pt')
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 checkpoint['best_val_loss'] = best_val_loss
-                # torch.save(checkpoint, output_dir / 'best.pt')
+                torch.save(checkpoint, output_dir / 'best.pt')
                 print(f"  New best model saved! Val Loss: {val_loss:.4f}")
 
     except KeyboardInterrupt:
         print("\nTraining interrupted by user")
         if checkpoint is not None:
-            # torch.save(checkpoint, output_dir / 'interrupted.pt')
+            torch.save(checkpoint, output_dir / 'interrupted.pt')
             print("Checkpoint saved to interrupted.pt")
         else:
             print("No checkpoint to save (interrupted before first epoch completed)")
